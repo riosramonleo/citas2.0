@@ -10,7 +10,8 @@ public record InboxItemDto(
         String firstMoverUserId,
         OffsetDateTime createdAt,
         OffsetDateTime expiresAt,
-        LastMessage lastMessage
+        LastMessage lastMessage,
+        long unreadCount
 ) {
     public record LastMessage(
             UUID messageId,

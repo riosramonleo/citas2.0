@@ -3,6 +3,7 @@ package com.rmmr.dating.messaging.api;
 import com.rmmr.dating.messaging.api.dto.MessageDto;
 import com.rmmr.dating.messaging.api.dto.SendMessageRequest;
 import com.rmmr.dating.messaging.domain.Message;
+import com.rmmr.dating.messaging.domain.MessageReadRepository;
 import com.rmmr.dating.messaging.domain.MessageRepository;
 import com.rmmr.dating.messaging.integration.MatchClient;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import com.rmmr.dating.messaging.service.MessageAppService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -23,11 +25,13 @@ public class MessageController {
     private final MessageRepository repo;
     private final MatchClient matchClient;
     private final MessageAppService messageAppService;
+    private final MessageReadRepository messageReadRepository;
 
-    public MessageController(MessageRepository repo, MatchClient matchClient, MessageAppService messageAppService) {
+    public MessageController(MessageRepository repo, MatchClient matchClient, MessageAppService messageAppService, MessageReadRepository messageReadRepository) {
         this.repo = repo;
         this.matchClient = matchClient;
         this.messageAppService = messageAppService;
+        this.messageReadRepository = messageReadRepository;
     }
 
     @PostMapping
@@ -88,6 +92,31 @@ public class MessageController {
                 m.getContent(),
                 m.getCreatedAt()
         ));
+    }
+
+    @PostMapping("/read")
+    public java.util.Map<String, Object> markRead(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID matchId
+    ) {
+        // Seguridad: solo participantes
+        matchClient.getMatchOrThrow(authorization, matchId);
+
+        var id = new com.rmmr.dating.messaging.domain.MessageReadId(matchId, jwt.getSubject());
+        var existing = messageReadRepository.findById(id)
+                .orElse(new com.rmmr.dating.messaging.domain.MessageRead(id));
+
+        var now = java.time.OffsetDateTime.now();
+        existing.setLastReadAt(now);
+        messageReadRepository.save(existing);
+
+        return java.util.Map.of(
+                "ok", true,
+                "matchId", matchId.toString(),
+                "userId", jwt.getSubject(),
+                "lastReadAt", now.toString()
+        );
     }
 
 }

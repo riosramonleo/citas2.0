@@ -53,4 +53,27 @@ public class MessagingClient {
                 .retrieve()
                 .body(LastMessagesBatchResponse.class);
     }
+
+    public InboxMetadataBatchResponse inboxMetadataBatch(String authorizationHeader, java.util.List<java.util.UUID> matchIds) {
+        return rest.post()
+                .uri("/internal/inbox/metadata")
+                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, authorizationHeader)
+                .body(new InboxMetadataBatchRequest(matchIds))
+                .retrieve()
+                .body(InboxMetadataBatchResponse.class);
+    }
+
+    public record InboxMetadataBatchRequest(java.util.List<java.util.UUID> matchIds) {}
+
+    public record InboxMetadataBatchResponse(java.util.List<Item> items) {
+        public record Item(java.util.UUID matchId, LastMessageDto lastMessage, long unreadCount) {}
+        public record LastMessageDto(
+                java.util.UUID id,
+                java.util.UUID matchId,
+                String senderUserId,
+                String content,
+                java.time.OffsetDateTime createdAt
+        ) {}
+    }
+
 }
