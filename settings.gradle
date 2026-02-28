@@ -1,0 +1,16 @@
+includeBuild('build-logic')
+
+rootProject.name = 'dating-app'
+
+include(
+        'services:api-gateway',
+        'services:profile-service',
+        'services:discovery-service',
+        'services:interaction-service',
+        'services:match-service',
+        'services:messaging-service',
+        'services:notification-service',
+        'libs:events-schema',
+        'libs:contracts-openapi',
+        'libs:common-observability'
+)

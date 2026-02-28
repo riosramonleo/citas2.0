@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/profile_db
+    username: profile_user
+    password: profile_pass
+
+  application:
+    name: profile-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/dating
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

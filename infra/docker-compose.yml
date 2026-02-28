@@ -1,0 +1,62 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8080:8080"
+
+  profile-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: profile_db
+      POSTGRES_USER: profile_user
+      POSTGRES_PASSWORD: profile_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - profile_db_data:/var/lib/postgresql/data
+
+  interaction-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: interaction_db
+      POSTGRES_USER: interaction_user
+      POSTGRES_PASSWORD: interaction_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - interaction_db_data:/var/lib/postgresql/data
+
+  match-db:
+    image: postgres:16
+    container_name: match-db
+    environment:
+      POSTGRES_DB: match_db
+      POSTGRES_USER: match_user
+      POSTGRES_PASSWORD: match_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - match_db_data:/var/lib/postgresql/data
+
+  messaging-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: messaging_db
+      POSTGRES_USER: messaging_user
+      POSTGRES_PASSWORD: messaging_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - messaging_db_data:/var/lib/postgresql/data
+
+volumes:
+  profile_db_data:
+  interaction_db_data:
+  match_db_data:
+  messaging_db_data:

@@ -1,0 +1,14 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = 'com.rmmr.dating'
+    version = '0.0.1-SNAPSHOT'
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+}

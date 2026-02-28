@@ -1,0 +1,43 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: match-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/dating}
+
+  datasource:
+    url: jdbc:postgresql://${MATCH_DB_HOST:localhost}:${MATCH_DB_PORT:5435}/${MATCH_DB_NAME:match_db}
+    username: ${MATCH_DB_USER:match_user}
+    password: ${MATCH_DB_PASS:match_pass}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+match:
+  expiry-minutes: ${MATCH_EXPIRY_MINUTES:1440}
+  heterosexual-initiator: FEMALE
+  same-sex-initiator: ANY
+  nonbinary-initiator: ANY
+
+clients:
+  interaction-base-url: ${INTERACTION_BASE_URL:http://localhost:8083}
+  profile-base-url: ${PROFILE_BASE_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
