@@ -24,6 +24,12 @@ public class UserBasics {
         updatedAt = OffsetDateTime.now();
     }
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "show_me", nullable = false, length = 16)
+    private ShowMe showMe = ShowMe.EVERYONE;
+
+    public ShowMe getShowMe() { return showMe; }
+    public void setShowMe(ShowMe showMe) { this.showMe = showMe; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
     public Gender getGender() { return gender; }

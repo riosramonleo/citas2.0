@@ -10,6 +10,9 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/dating}
 
+clients:
+  profile-base-url: ${PROFILE_BASE_URL:http://localhost:8081}
+
 management:
   endpoints:
     web:
