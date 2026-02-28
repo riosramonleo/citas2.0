@@ -7,6 +7,7 @@ import com.rmmr.dating.messaging.domain.MessageRepository;
 import com.rmmr.dating.messaging.integration.MatchClient;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -52,33 +53,6 @@ public class MessageController {
         );
     }
 
-    /**
-    @PostMapping
-    public MessageDto send(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
-            @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID matchId,
-            @Valid @RequestBody SendMessageRequest req
-    ) {
-        // Bumble gatekeeper: activa o valida match
-        matchClient.activateOrThrow(authorization, matchId);
-
-        var m = new Message();
-        m.setMatchId(matchId);
-        m.setSenderUserId(jwt.getSubject());
-        m.setContent(req.content());
-
-        var saved = repo.save(m);
-
-        return new MessageDto(
-                saved.getId(),
-                saved.getMatchId(),
-                saved.getSenderUserId(),
-                saved.getContent(),
-                saved.getCreatedAt()
-        );
-    }**/
-
     @GetMapping
     public List<MessageDto> list(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
@@ -92,4 +66,28 @@ public class MessageController {
                 .map(x -> new MessageDto(x.getId(), x.getMatchId(), x.getSenderUserId(), x.getContent(), x.getCreatedAt()))
                 .toList();
     }
+
+    @GetMapping("/last")
+    public ResponseEntity<MessageDto> last(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID matchId
+    ) {
+        // Seguridad: valida que el usuario es participante
+        matchClient.getMatchOrThrow(authorization, matchId);
+
+        var m = repo.findTop1ByMatchIdOrderByCreatedAtDesc(matchId).orElse(null);
+        if (m == null) {
+            return ResponseEntity.noContent().build(); // 204
+        }
+
+        return ResponseEntity.ok(new MessageDto(
+                m.getId(),
+                m.getMatchId(),
+                m.getSenderUserId(),
+                m.getContent(),
+                m.getCreatedAt()
+        ));
+    }
+
 }

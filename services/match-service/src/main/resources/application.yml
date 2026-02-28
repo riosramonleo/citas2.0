@@ -35,6 +35,7 @@ match:
 clients:
   interaction-base-url: ${INTERACTION_BASE_URL:http://localhost:8083}
   profile-base-url: ${PROFILE_BASE_URL:http://localhost:8081}
+  messaging-base-url: ${MESSAGING_BASE_URL:http://localhost:8085}
 
 management:
   endpoints:
