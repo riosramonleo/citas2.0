@@ -1,5 +1,6 @@
 package com.rmmr.dating.discovery.api;
 
+import com.rmmr.dating.discovery.integration.InteractionClient;
 import com.rmmr.dating.discovery.integration.ProfileClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,9 +14,11 @@ import java.util.List;
 public class DiscoveryController {
 
     private final ProfileClient profileClient;
+    private final InteractionClient interactionClient;
 
-    public DiscoveryController(ProfileClient profileClient) {
+    public DiscoveryController(ProfileClient profileClient, InteractionClient interactionClient) {
         this.profileClient = profileClient;
+        this.interactionClient = interactionClient;
     }
 
     @GetMapping("/feed")
@@ -27,6 +30,8 @@ public class DiscoveryController {
         String me = jwt.getSubject();
         var all = profileClient.listBasics(authorization);
 
+        var swipedTargets = new java.util.HashSet<>(interactionClient.myTargets(authorization));
+
         // find me
         var meBasics = all.stream().filter(b -> me.equals(b.userId())).findFirst().orElse(null);
         String myShowMe = meBasics != null ? meBasics.showMe() : "EVERYONE";
@@ -34,6 +39,7 @@ public class DiscoveryController {
         return all.stream()
                 .filter(b -> !me.equals(b.userId()))
                 .filter(b -> allowByShowMe(myShowMe, b.gender()))
+                .filter(b -> !swipedTargets.contains(b.userId()))
                 .limit(limit)
                 .map(b -> new FeedItem(b.userId(), b.gender()))
                 .toList();

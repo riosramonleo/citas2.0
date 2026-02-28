@@ -12,6 +12,7 @@ spring:
 
 clients:
   profile-base-url: ${PROFILE_BASE_URL:http://localhost:8081}
+  interaction-base-url: ${INTERACTION_BASE_URL:http://localhost:8083}
 
 management:
   endpoints:
