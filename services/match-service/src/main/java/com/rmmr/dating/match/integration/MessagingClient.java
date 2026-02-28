@@ -5,6 +5,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import com.rmmr.dating.match.integration.dto.LastMessagesBatchRequest;
+import com.rmmr.dating.match.integration.dto.LastMessagesBatchResponse;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -42,4 +44,13 @@ public class MessagingClient {
             String content,
             OffsetDateTime createdAt
     ) {}
+
+    public LastMessagesBatchResponse lastMessagesBatch(String authorizationHeader, java.util.List<java.util.UUID> matchIds) {
+        return rest.post()
+                .uri("/internal/messages/last")
+                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, authorizationHeader)
+                .body(new LastMessagesBatchRequest(matchIds))
+                .retrieve()
+                .body(LastMessagesBatchResponse.class);
+    }
 }

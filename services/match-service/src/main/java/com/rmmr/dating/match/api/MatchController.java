@@ -92,17 +92,40 @@ public class MatchController {
     ) {
         var pageable = org.springframework.data.domain.PageRequest.of(0, Math.min(limit, 100));
 
-        // Usa tu query ordenado si ya lo agregaste; si no, usa findAllForUser(jwt.getSubject()) y luego sort.
         var matches = repo.findAllForUserOrderByCreatedAtDesc(jwt.getSubject(), pageable);
+        if (matches.isEmpty()) return List.of();
+
+        // 1) Batch: pedir últimos mensajes de todos los matchIds en 1 llamada
+        var matchIds = matches.stream().map(m -> m.getId()).toList();
+
+        var batch = messagingClient.lastMessagesBatch(authorization, matchIds);
+
+        // 2) Map matchId -> lastMessage
+        var lastMap = new java.util.HashMap<java.util.UUID,
+                com.rmmr.dating.match.integration.dto.LastMessagesBatchResponse.LastMessageDto>();
+
+        if (batch != null && batch.items() != null) {
+            for (var item : batch.items()) {
+                if (item != null && item.lastMessage() != null) {
+                    lastMap.put(item.matchId(), item.lastMessage());
+                }
+            }
+        }
+
+        // 3) Construir Inbox items
+        String me = jwt.getSubject();
 
         var items = matches.stream().map(m -> {
-            String me = jwt.getSubject();
             String other = me.equals(m.getUser1Id()) ? m.getUser2Id() : m.getUser1Id();
 
-            var lastOpt = messagingClient.lastMessage(authorization, m.getId());
-            InboxItemDto.LastMessage last = lastOpt
-                    .map(x -> new InboxItemDto.LastMessage(x.id(), x.senderUserId(), x.content(), x.createdAt()))
-                    .orElse(null);
+            var lastDto = lastMap.get(m.getId());
+            InboxItemDto.LastMessage last = (lastDto == null) ? null :
+                    new InboxItemDto.LastMessage(
+                            lastDto.id(),
+                            lastDto.senderUserId(),
+                            lastDto.content(),
+                            lastDto.createdAt()
+                    );
 
             return new InboxItemDto(
                     m.getId(),
@@ -115,7 +138,7 @@ public class MatchController {
             );
         }).toList();
 
-        // Orden: por lastMessage.createdAt si existe, si no por createdAt del match
+        // 4) Orden final: por lastMessage.createdAt si existe, si no por createdAt del match
         return items.stream()
                 .sorted((a, b) -> {
                     var ta = (a.lastMessage() != null && a.lastMessage().createdAt() != null)
